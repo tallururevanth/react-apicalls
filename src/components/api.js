@@ -22,15 +22,28 @@ const Api = () => {
     let postObject = JSON.parse(e.target.name);
     setTitle(postObject.title);
     setAuthor(postObject.author);
-    setTitle(postObject.author);
+    setId(postObject.id);
+    console.log(`Update button called for entry ` + postObject.id);
   };
-
+  const deleteEntry = (e) => {
+    let delObject = JSON.parse(e.target.name);
+    const apiCallDel = {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    };
+    fetch('http://localhost:3000/posts/' + delObject.id, apiCallDel).then(
+      (e) => {
+        console.log(`Entry ${delObject.id} Deleted`);
+        getApi();
+      }
+    );
+  };
   if (posts == null) {
     return <p id="loading">Loading...</p>;
   }
-  if (id == null) {
-    return (
-      <React.Fragment>
+  return (
+    <React.Fragment>
+      {id == null ? (
         <div id="addform">
           <form
             id="postform"
@@ -71,38 +84,95 @@ const Api = () => {
                 setAuthor(e.target.value);
               }}
             />
-            <input type="submit" />
+            <input type="submit" value="Add" />
           </form>
         </div>
-        <div id="datadisplay">
-          <table border="1px">
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Author</th>
-              <th>Actions</th>
-            </tr>
-            {posts.map((post) => {
-              let stringData = JSON.stringify(post);
-              return (
-                <tr>
-                  <td>{post.id}</td>
-                  <td>{post.title}</td>
-                  <td>{post.author}</td>
-                  <td>
-                    <button name={stringData} onClick={enableEdit}>
-                      Edit/Update
-                    </button>
-                    <button>Delete</button>
-                  </td>
-                </tr>
-              );
-            })}
-          </table>
+      ) : (
+        <div id="updateform">
+          <form
+            id="postform"
+            onSubmit={(e) => {
+              e.preventDefault();
+              console.log('Update button called');
+              const apiCallOptions = {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  title: title,
+                  author: author,
+                }),
+              };
+              fetch('http://localhost:3000/posts/' + id, apiCallOptions)
+                .then((response) => response.json())
+                .then((data) => {
+                  console.log('data updated');
+                  getApi();
+                  setTitle('');
+                  setAuthor('');
+                  setId(null);
+                });
+            }}
+          >
+            <input
+              type="text"
+              value={title}
+              id="titlevalue"
+              onChange={(e) => {
+                setTitle(e.target.value);
+              }}
+            />
+            <input
+              type="text"
+              value={author}
+              id="authorvalue"
+              onChange={(e) => {
+                setAuthor(e.target.value);
+              }}
+            />
+            <input type="submit" value="Update" />
+            <button
+              onClick={() => {
+                setTitle('');
+                setAuthor('');
+                setId(null);
+                console.log('update cancelled');
+              }}
+            >
+              Cancel
+            </button>
+          </form>
         </div>
-      </React.Fragment>
-    );
-  }
+      )}
+      <div id="datadisplay">
+        <table border="1px">
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Actions</th>
+          </tr>
+          {posts.map((post) => {
+            let stringData = JSON.stringify(post);
+            return (
+              <tr>
+                <td>{post.id}</td>
+                <td>{post.title}</td>
+                <td>{post.author}</td>
+                <td>
+                  <button name={stringData} onClick={enableEdit}>
+                    Edit/Update
+                  </button>
+                  <button name={stringData} onClick={deleteEntry}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </table>
+      </div>
+    </React.Fragment>
+  );
 };
 
 export default Api;
